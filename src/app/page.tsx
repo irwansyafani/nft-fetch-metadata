@@ -1,95 +1,91 @@
-import Image from 'next/image'
-import styles from './page.module.css'
+"use client";
 
-export default function Home() {
+import {
+  EthereumClient,
+  w3mConnectors,
+  w3mProvider,
+} from "@web3modal/ethereum";
+import { Web3Modal, Web3Button, useWeb3Modal } from "@web3modal/react";
+import { useEffect, useState } from "react";
+import { configureChains, createConfig, WagmiConfig, useAccount } from "wagmi";
+import { arbitrum, mainnet, polygon } from "wagmi/chains";
+import { getNFTs } from "@/components/utils/contract";
+
+const chains = [arbitrum, mainnet, polygon];
+const projectId = `${process.env.WALLET_CONNNECT_PROJECT_ID}`;
+const infuraId = `${process.env.INFURA_ID}`;
+
+const { publicClient, webSocketPublicClient } = configureChains(chains, [
+  w3mProvider({ projectId }),
+]);
+const wagmiConfig = createConfig({
+  autoConnect: true,
+  connectors: w3mConnectors({ projectId, chains }),
+  publicClient,
+  webSocketPublicClient,
+});
+
+const ethereumClient = new EthereumClient(wagmiConfig, chains, infuraId);
+
+function App() {
   return (
-    <main className={styles.main}>
-      <div className={styles.description}>
-        <p>
-          Get started by editing&nbsp;
-          <code className={styles.code}>src/app/page.tsx</code>
-        </p>
-        <div>
-          <a
-            href="https://vercel.com?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            By{' '}
-            <Image
-              src="/vercel.svg"
-              alt="Vercel Logo"
-              className={styles.vercelLogo}
-              width={100}
-              height={24}
-              priority
-            />
-          </a>
-        </div>
-      </div>
-
-      <div className={styles.center}>
-        <Image
-          className={styles.logo}
-          src="/next.svg"
-          alt="Next.js Logo"
-          width={180}
-          height={37}
-          priority
-        />
-      </div>
-
-      <div className={styles.grid}>
-        <a
-          href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Docs <span>-&gt;</span>
-          </h2>
-          <p>Find in-depth information about Next.js features and API.</p>
-        </a>
-
-        <a
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Learn <span>-&gt;</span>
-          </h2>
-          <p>Learn about Next.js in an interactive course with&nbsp;quizzes!</p>
-        </a>
-
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Templates <span>-&gt;</span>
-          </h2>
-          <p>Explore the Next.js 13 playground.</p>
-        </a>
-
-        <a
-          href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Deploy <span>-&gt;</span>
-          </h2>
-          <p>
-            Instantly deploy your Next.js site to a shareable URL with Vercel.
-          </p>
-        </a>
-      </div>
-    </main>
-  )
+    <>
+      <WagmiConfig config={wagmiConfig}>
+        <HomePage />
+      </WagmiConfig>
+      <Web3Modal projectId={projectId} ethereumClient={ethereumClient} />
+    </>
+  );
 }
+
+const HomePage = () => {
+  const { open } = useWeb3Modal();
+  const { address, status } = useAccount({});
+  const [tokens, setTokens] = useState([]);
+
+  const fetchNFTs = async () => {
+    const nfts: any = await getNFTs(address);
+    setTokens(nfts);
+  };
+
+  useEffect(() => {
+    console.log(status, address);
+  }, [status]);
+
+  return (
+    <>
+      {status !== "connected" && (
+        <>
+          <Web3Button />
+          <button onClick={open}>Connect with WalletConnect</button>
+        </>
+      )}
+      <p>{address}</p>
+      <br />
+      {status === "connected" && !tokens.length && (
+        <>
+          <button onClick={fetchNFTs}>Fetch NFTs</button>
+        </>
+      )}
+      {tokens.length > 0 && (
+        <div style={{ display: "flex", flexWrap: "wrap", columnGap: 10 }}>
+          {tokens.map((item: any, i: number) => {
+            return (
+              <div key={i}>
+                <img
+                  src={item.image}
+                  width={400}
+                  height={400}
+                  alt={item.name}
+                />
+                <p>{item.name}</p>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </>
+  );
+};
+
+export default App;
