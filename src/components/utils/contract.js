@@ -32,6 +32,13 @@ export const getNFTs = async (address) => {
   return tokens;
 };
 
+export const getBalance = async (address) => {
+  const provider = new InfuraProvider("mainnet", process.env.INFURA_ID);
+  const contract = new Contract(process.env.CONTRACT_ADDRESS, ABI, provider);
+  const balance = await contract.balanceOf(address);
+  return balance;
+};
+
 export const disconnectWallet = async () => {
   const provider = new InfuraProvider("mainnet", process.env.INFURA_ID);
 };
