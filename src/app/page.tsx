@@ -13,7 +13,6 @@ import { getNFTs } from "@/components/utils/contract";
 
 const chains = [arbitrum, mainnet, polygon];
 const projectId = `${process.env.WALLET_CONNNECT_PROJECT_ID}`;
-const infuraId = `${process.env.INFURA_ID}`;
 
 const { publicClient, webSocketPublicClient } = configureChains(chains, [
   w3mProvider({ projectId }),
@@ -25,7 +24,7 @@ const wagmiConfig = createConfig({
   webSocketPublicClient,
 });
 
-const ethereumClient = new EthereumClient(wagmiConfig, chains, infuraId);
+const ethereumClient = new EthereumClient(wagmiConfig, chains);
 
 function App() {
   return (
