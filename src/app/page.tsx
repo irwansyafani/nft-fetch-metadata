@@ -14,10 +14,10 @@ import {
   useAccount,
   useDisconnect,
 } from "wagmi";
-import { arbitrum, mainnet, polygon } from "wagmi/chains";
+import { arbitrum, mainnet, polygon, polygonMumbai } from "wagmi/chains";
 import { getBalance, getNFTs } from "@/components/utils/contract";
 
-const chains = [arbitrum, mainnet, polygon];
+const chains = [arbitrum, mainnet, polygon, polygonMumbai];
 const projectId = `${process.env.WALLET_CONNNECT_PROJECT_ID}`;
 
 const { publicClient, webSocketPublicClient } = configureChains(chains, [
@@ -53,7 +53,8 @@ const HomePage = () => {
 
   const fetchNFTs = async () => {
     // const nfts: any = await getNFTs(address);
-    const nfts: any = await getBalance(address);
+    const nfts: number = await getBalance(address);
+    console.log(nfts);
     setHasToken(!!nfts);
     setFetchClicked(true);
   };
@@ -84,7 +85,7 @@ const HomePage = () => {
           <button onClick={open}>Connect with WalletConnect</button>
         </>
       )} */}
-      <p>{address}</p>
+      <p>{address || "Signed Out"}</p>
       <br />
       {status === "connected" && !hasToken && (
         <>
